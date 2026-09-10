@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BUDGET_TIERS } from "@/lib/properties/budget";
 import {
   countActiveFilters,
   filtersToQueryString,
@@ -71,6 +72,23 @@ export function SearchFilters({ filters, resultCount }: SearchFiltersProps) {
             {PROPERTY_TYPES.map((t) => (
               <option key={t.value} value={t.value}>
                 {t.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="budget">Budget class</Label>
+          <select
+            id="budget"
+            name="budget"
+            defaultValue={filters.budget ?? ""}
+            className={selectClassName}
+          >
+            <option value="">All budgets</option>
+            {BUDGET_TIERS.map((tier) => (
+              <option key={tier.value} value={tier.value}>
+                {tier.label} — {tier.hint}
               </option>
             ))}
           </select>

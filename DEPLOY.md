@@ -58,7 +58,22 @@ If a new environment uses a fresh Supabase project, run `INSTALL.sql` again ther
 6. Publish listing → appears on `/browse`
 7. Tenant: message landlord from a listing
 
-## 8. Promote an admin (SQL Editor)
+## 8. Extra SQL (likes already exist; reviews + NIN columns)
+
+Run in SQL Editor if not applied yet:
+
+`scripts/STEP6-reviews-nin.sql`
+
+## 9. Dojah NIN auto-KYC (Vercel env)
+
+| Name | Value |
+|------|--------|
+| `DOJAH_APP_ID` | from dojah.io |
+| `DOJAH_SECRET_KEY` | from dojah.io |
+
+Without these keys, valid 11-digit NINs auto-verify in **mock mode**.
+
+## 10. Promote an admin (SQL Editor)
 
 ```sql
 update public.profiles

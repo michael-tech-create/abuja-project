@@ -6,7 +6,8 @@ import { PropertyCard } from "@/components/browse/property-card";
 import { SearchFilters } from "@/components/browse/search-filters";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { getCurrentProfile } from "@/lib/auth/session";
+import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
+import { getFavoritePropertyIds } from "@/lib/favorites/queries";
 import { searchPublicProperties } from "@/lib/properties/queries";
 import { parseSearchParams } from "@/lib/properties/search";
 
@@ -24,7 +25,11 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
   const raw = await searchParams;
   const filters = parseSearchParams(raw);
   const profile = await getCurrentProfile();
+  const user = await getSessionUser();
   const { properties, source } = await searchPublicProperties(filters);
+  const likedIds = user
+    ? await getFavoritePropertyIds(user.id)
+    : new Set<string>();
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -35,8 +40,8 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
             Browse Abuja rentals
           </h1>
           <p className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-            Only verified and published listings appear here. Filter by district,
-            budget, and property type — switch to map view to explore by location.
+            Filter by district, budget class (Budget → Luxury), and type. Like
+            homes you love and read resident reviews on each listing.
           </p>
         </div>
 
@@ -44,9 +49,8 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
           <Alert className="rounded-3xl border-border/70 bg-card">
             <AlertTitle>Demo listings</AlertTitle>
             <AlertDescription>
-              Supabase is not configured, so you are seeing sample verified
-              properties. Connect `.env.local` and publish verified listings to
-              replace this data.
+              Sample verified properties are shown when live data is empty or
+              unavailable.
             </AlertDescription>
           </Alert>
         )}
@@ -57,8 +61,7 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
           <div className="rounded-2xl border border-dashed border-border px-6 py-16 text-center">
             <h2 className="text-lg font-medium">No listings match</h2>
             <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-              Try widening your budget or clearing a district filter. New
-              verified homes appear here as admins approve them.
+              Try another budget class or clear district filters.
             </p>
             <Link
               href="/browse"
@@ -72,7 +75,12 @@ export default async function BrowsePage({ searchParams }: BrowsePageProps) {
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {properties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <PropertyCard
+                key={property.id}
+                property={property}
+                showLike={Boolean(user)}
+                liked={likedIds.has(property.id)}
+              />
             ))}
           </div>
         )}

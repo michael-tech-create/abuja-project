@@ -3,7 +3,14 @@ import { NextResponse, type NextRequest } from "next/server";
 
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase/env";
 
-const AUTH_ROUTES = ["/auth/login", "/auth/signup", "/auth/check-email"];
+const AUTH_ROUTES = [
+  "/auth/login",
+  "/auth/signup",
+  "/auth/check-email",
+  "/auth/forgot-password",
+];
+/** Recovery session must stay on this page to set a new password */
+const RECOVERY_AUTH_ROUTES = ["/auth/reset-password"];
 const PROTECTED_PREFIXES = [
   "/dashboard",
   "/onboarding",
@@ -60,6 +67,7 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isAuthRoute = startsWithAny(pathname, AUTH_ROUTES);
+  const isRecoveryRoute = startsWithAny(pathname, RECOVERY_AUTH_ROUTES);
   const isProtected = startsWithAny(pathname, PROTECTED_PREFIXES);
   const isCallback = pathname.startsWith("/auth/callback");
   const isSetup = pathname.startsWith("/setup");
@@ -75,7 +83,11 @@ export async function updateSession(request: NextRequest) {
   let profile: { onboarding_completed?: boolean; role?: string } | null = null;
   let profilesMissing = false;
 
-  if (user && (isAuthRoute || isProtected || isSetup) && !isCallback) {
+  if (
+    user &&
+    (isAuthRoute || isRecoveryRoute || isProtected || isSetup) &&
+    !isCallback
+  ) {
     const { data, error } = await supabase
       .from("profiles")
       .select("onboarding_completed, role")
@@ -105,7 +117,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && isAuthRoute && !isCallback && !profilesMissing) {
+  // Do not bounce recovery sessions away from reset-password
+  if (user && isAuthRoute && !isCallback && !isRecoveryRoute && !profilesMissing) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = profile?.onboarding_completed
       ? "/dashboard"

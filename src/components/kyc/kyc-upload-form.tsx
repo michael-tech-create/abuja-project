@@ -6,6 +6,7 @@ import { FileTextIcon, Trash2Icon, UploadIcon } from "lucide-react";
 import { UploadProgressBar } from "@/components/media/upload-progress";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { STORAGE_BUCKETS } from "@/lib/constants";
 import {
@@ -158,6 +159,14 @@ export function KycUploadForm({ userId, role }: KycUploadFormProps) {
         </Alert>
       )}
 
+      <Alert className="rounded-3xl border-border/70 bg-card">
+        <AlertTitle>Automated NIN verification</AlertTitle>
+        <AlertDescription>
+          Enter your 11-digit NIN. We verify it with Dojah (or mock mode if API
+          keys are not set). Upload your NIN slip as supporting proof.
+        </AlertDescription>
+      </Alert>
+
       <div className="space-y-2">
         <Label htmlFor="docType">Document type</Label>
         <select
@@ -261,7 +270,19 @@ export function KycUploadForm({ userId, role }: KycUploadFormProps) {
         </ul>
       )}
 
-      <form action={formAction}>
+      <form action={formAction} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="nin">NIN number (11 digits)</Label>
+          <Input
+            id="nin"
+            name="nin"
+            inputMode="numeric"
+            pattern="[0-9]{11}"
+            maxLength={11}
+            placeholder="12345678901"
+            required
+          />
+        </div>
         <input type="hidden" name="documents" value={payload} />
         <Button
           type="submit"
@@ -270,13 +291,13 @@ export function KycUploadForm({ userId, role }: KycUploadFormProps) {
             pending || uploading || readyDocs.length === 0 || readyDocs.length !== docs.length
           }
         >
-          {pending ? "Submitting…" : "Submit KYC for review"}
+          {pending ? "Verifying NIN…" : "Verify NIN & submit KYC"}
         </Button>
       </form>
 
       <p className="text-xs text-muted-foreground">
-        Tip: upload NIN plus C of O (landlords) or agency licence (agents). An
-        admin will review them at <code>/admin/kyc</code>.
+        Tip: upload NIN slip plus C of O (landlords) or agency licence (agents).
+        Successful NIN checks auto-verify your KYC so you can publish listings.
       </p>
     </div>
   );

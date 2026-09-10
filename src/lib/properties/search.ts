@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+import {
+  budgetRange,
+  classifyBudget,
+  type BudgetTier,
+} from "@/lib/properties/budget";
 import { ABUJA_DISTRICTS, PROPERTY_TYPES } from "@/types/database";
 import type { AbujaDistrict, Property, PropertyType } from "@/types/database";
 
@@ -17,6 +22,7 @@ export const searchParamsSchema = z.object({
   q: z.string().trim().max(120).optional().default(""),
   district: z.enum(districtValues).optional(),
   type: z.enum(propertyTypeValues).optional(),
+  budget: z.enum(["budget", "mid", "premium", "luxury"]).optional(),
   minPrice: z.coerce.number().nonnegative().optional(),
   maxPrice: z.coerce.number().positive().optional(),
   beds: z.coerce.number().int().min(0).max(20).optional(),
@@ -41,6 +47,7 @@ export function parseSearchParams(
     q: flat.q || undefined,
     district: flat.district || undefined,
     type: flat.type || undefined,
+    budget: flat.budget || undefined,
     minPrice: flat.minPrice || undefined,
     maxPrice: flat.maxPrice || undefined,
     beds: flat.beds || undefined,
@@ -52,7 +59,14 @@ export function parseSearchParams(
     return searchParamsSchema.parse({});
   }
 
-  const data = parsed.data;
+  let data = parsed.data;
+
+  // Budget tier expands into min/max unless explicit prices were set
+  if (data.budget && data.minPrice == null && data.maxPrice == null) {
+    const range = budgetRange(data.budget as BudgetTier);
+    data = { ...data, ...range };
+  }
+
   if (
     data.minPrice != null &&
     data.maxPrice != null &&
@@ -69,8 +83,13 @@ export function filtersToQueryString(filters: Partial<PropertySearchFilters>) {
   if (filters.q) params.set("q", filters.q);
   if (filters.district) params.set("district", filters.district);
   if (filters.type) params.set("type", filters.type);
-  if (filters.minPrice != null) params.set("minPrice", String(filters.minPrice));
-  if (filters.maxPrice != null) params.set("maxPrice", String(filters.maxPrice));
+  if (filters.budget) params.set("budget", filters.budget);
+  if (filters.minPrice != null && !filters.budget) {
+    params.set("minPrice", String(filters.minPrice));
+  }
+  if (filters.maxPrice != null && !filters.budget) {
+    params.set("maxPrice", String(filters.maxPrice));
+  }
   if (filters.beds != null) params.set("beds", String(filters.beds));
   if (filters.sort && filters.sort !== "newest") params.set("sort", filters.sort);
   if (filters.view && filters.view !== "grid") params.set("view", filters.view);
@@ -138,8 +157,11 @@ export function countActiveFilters(filters: PropertySearchFilters) {
   if (filters.q) count += 1;
   if (filters.district) count += 1;
   if (filters.type) count += 1;
-  if (filters.minPrice != null) count += 1;
-  if (filters.maxPrice != null) count += 1;
+  if (filters.budget) count += 1;
+  if (!filters.budget && filters.minPrice != null) count += 1;
+  if (!filters.budget && filters.maxPrice != null) count += 1;
   if (filters.beds != null) count += 1;
   return count;
 }
+
+export { classifyBudget };

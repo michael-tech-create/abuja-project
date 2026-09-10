@@ -28,6 +28,8 @@ export async function requireAdminAccess(): Promise<{
         kyc_status: "verified",
         is_active: true,
         onboarding_completed: true,
+        nin_number: null,
+        nin_verified_at: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },

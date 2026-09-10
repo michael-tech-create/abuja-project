@@ -10,20 +10,29 @@ import {
 } from "lucide-react";
 
 import { SiteHeader } from "@/components/layout/site-header";
+import { LikeButton } from "@/components/properties/like-button";
+import { ReviewSection } from "@/components/properties/review-section";
 import { startConversationAction } from "@/lib/chat/actions";
-import { getCurrentProfile } from "@/lib/auth/session";
+import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
+import { isPropertyFavorited } from "@/lib/favorites/queries";
 import { AMENITY_OPTIONS } from "@/lib/properties/constants";
+import {
+  budgetHint,
+  budgetLabel,
+  classifyBudget,
+} from "@/lib/properties/budget";
 import {
   districtLabel,
   formatRentLabel,
   propertyTypeLabel,
 } from "@/lib/properties/format";
 import { getPublicProperty } from "@/lib/properties/queries";
+import { getPropertyReviews } from "@/lib/reviews/queries";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
 type PageProps = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; reviewed?: string }>;
 };
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -41,8 +50,9 @@ export default async function PublicPropertyPage({
   searchParams,
 }: PageProps) {
   const { id } = await params;
-  const { error } = await searchParams;
+  const { error, reviewed } = await searchParams;
   const profile = await getCurrentProfile();
+  const user = await getSessionUser();
   const { property, source } = await getPublicProperty(id);
 
   if (!property) notFound();
@@ -54,6 +64,12 @@ export default async function PublicPropertyPage({
   const canMessage =
     !profile || profile.role === "tenant" || profile.role === "admin";
   const demoMode = !hasSupabaseEnv();
+  const tier = classifyBudget(property.price);
+  const liked = user
+    ? await isPropertyFavorited(user.id, property.id)
+    : false;
+  const { reviews, average, count } = await getPropertyReviews(property.id);
+  const canReview = Boolean(user);
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -77,6 +93,11 @@ export default async function PublicPropertyPage({
                 : "Could not start chat. Please try again."}
           </div>
         )}
+        {reviewed && (
+          <div className="mb-6 rounded-3xl border border-border/70 bg-card px-4 py-3 text-sm">
+            Thanks — your review was posted.
+          </div>
+        )}
 
         <div className="soft-card overflow-hidden">
           {property.images[0] && (
@@ -87,6 +108,15 @@ export default async function PublicPropertyPage({
                 alt=""
                 className="size-full object-cover"
               />
+              {user && (
+                <div className="absolute top-4 right-4">
+                  <LikeButton
+                    propertyId={property.id}
+                    liked={liked}
+                    path={`/properties/${property.id}`}
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -94,6 +124,14 @@ export default async function PublicPropertyPage({
             <div className="space-y-4">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="sage-pill">Verified · For Rent</span>
+                <span className="rounded-full bg-sand px-3 py-1 text-xs font-medium">
+                  {budgetLabel(tier)} · {budgetHint(tier)}
+                </span>
+                {count > 0 && average != null && (
+                  <span className="rounded-full bg-sand px-3 py-1 text-xs font-medium">
+                    {average}★ ({count})
+                  </span>
+                )}
                 {source === "demo" && (
                   <span className="rounded-full bg-sand px-3 py-1 text-xs font-medium text-muted-foreground">
                     Demo
@@ -204,6 +242,15 @@ export default async function PublicPropertyPage({
                 </div>
               </section>
             )}
+
+            <ReviewSection
+              propertyId={property.id}
+              reviews={reviews}
+              average={average}
+              count={count}
+              canReview={canReview}
+              signedIn={Boolean(user)}
+            />
 
             <div className="flex flex-col gap-3 border-t border-border/70 pt-6 sm:flex-row sm:items-center sm:justify-between">
               <p className="max-w-md text-sm text-muted-foreground">

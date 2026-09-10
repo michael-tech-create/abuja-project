@@ -9,10 +9,12 @@ import {
   SIGNUP_ROLE_COOKIE,
 } from "@/lib/auth/constants";
 import {
+  emailOnlySchema,
   loginSchema,
   onboardingSchema,
   signupRoles,
   signupSchema,
+  updatePasswordSchema,
 } from "@/lib/auth/schemas";
 import { resolveOrigin } from "@/lib/site-url";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/server";
@@ -132,6 +134,116 @@ export async function signOutAction() {
   }
   revalidatePath("/", "layout");
   redirect("/");
+}
+
+export async function requestPasswordResetAction(
+  _prev: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = emailOnlySchema.safeParse({
+    email: formData.get("email"),
+  });
+  if (!parsed.success) {
+    return {
+      error: "Please enter a valid email.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  if (!hasSupabaseEnv()) return missingSupabaseState();
+
+  const supabase = await createClient();
+  const origin = await resolveOrigin();
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+    redirectTo: `${origin}/auth/callback?next=/auth/reset-password`,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  redirect(
+    `/auth/check-email?email=${encodeURIComponent(parsed.data.email)}&type=reset`,
+  );
+}
+
+export async function sendMagicLinkAction(
+  _prev: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = emailOnlySchema.safeParse({
+    email: formData.get("email"),
+  });
+  if (!parsed.success) {
+    return {
+      error: "Please enter a valid email.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  if (!hasSupabaseEnv()) return missingSupabaseState();
+
+  const supabase = await createClient();
+  const origin = await resolveOrigin();
+  const { error } = await supabase.auth.signInWithOtp({
+    email: parsed.data.email,
+    options: {
+      shouldCreateUser: false,
+      emailRedirectTo: `${origin}/auth/callback?next=/dashboard`,
+    },
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  redirect(
+    `/auth/check-email?email=${encodeURIComponent(parsed.data.email)}&type=magic`,
+  );
+}
+
+export async function updatePasswordAction(
+  _prev: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  const parsed = updatePasswordSchema.safeParse({
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+  if (!parsed.success) {
+    return {
+      error: "Please fix the highlighted fields.",
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  if (!hasSupabaseEnv()) return missingSupabaseState();
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      error:
+        "Your reset link is missing or expired. Request a new password reset email.",
+    };
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  });
+
+  if (error) {
+    return { error: error.message };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("onboarding_completed")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  revalidatePath("/", "layout");
+  redirect(profile?.onboarding_completed ? "/dashboard" : "/onboarding");
 }
 
 export async function completeOnboardingAction(

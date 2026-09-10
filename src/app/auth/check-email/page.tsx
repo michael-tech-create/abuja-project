@@ -9,50 +9,68 @@ export const metadata: Metadata = {
 };
 
 type CheckEmailPageProps = {
-  searchParams: Promise<{ email?: string }>;
+  searchParams: Promise<{ email?: string; type?: string }>;
 };
 
 export default async function CheckEmailPage({ searchParams }: CheckEmailPageProps) {
-  const { email } = await searchParams;
+  const { email, type } = await searchParams;
+
+  const title =
+    type === "reset"
+      ? "Reset link sent"
+      : type === "magic"
+        ? "Magic link sent"
+        : "Check your email";
+
+  const description =
+    type === "reset"
+      ? "Open the password reset email and tap the link to choose a new password."
+      : type === "magic"
+        ? "Open the magic link email to sign in without a password."
+        : "We sent a confirmation link to activate your AbujaRentals account.";
 
   return (
-    <AuthShell
-      title="Check your email"
-      description="We sent a confirmation link to activate your AbujaRentals account."
-    >
+    <AuthShell title={title} description={description}>
       <Alert>
-        <AlertTitle>Confirmation required</AlertTitle>
+        <AlertTitle>
+          {type === "reset"
+            ? "Password reset"
+            : type === "magic"
+              ? "Magic link"
+              : "Confirmation required"}
+        </AlertTitle>
         <AlertDescription>
           {email ? (
             <>
-              Open the link sent to <strong>{email}</strong> to finish signing
-              up. After confirming, you will complete a short onboarding step.
+              Open the link sent to <strong>{email}</strong>.
+              {type === "reset" && (
+                <>
+                  {" "}
+                  It will take you to a page where you can set a new password —
+                  not the homepage.
+                </>
+              )}
             </>
           ) : (
-            <>
-              Open the confirmation link in your inbox, then return here to sign
-              in.
-            </>
+            <>Open the link in your inbox, then return here to continue.</>
           )}
         </AlertDescription>
       </Alert>
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Wrong email?{" "}
-        <Link
-          href="/auth/signup"
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          Sign up again
-        </Link>{" "}
-        or{" "}
         <Link
           href="/auth/login"
           className="font-medium text-foreground underline-offset-4 hover:underline"
         >
-          sign in
+          Back to sign in
         </Link>
-        .
+        {" · "}
+        <Link
+          href="/auth/forgot-password"
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+        >
+          Resend link
+        </Link>
       </p>
     </AuthShell>
   );

@@ -55,7 +55,15 @@ export function LoginForm({ errorFromQuery }: LoginFormProps) {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
+          <div className="flex items-center justify-between gap-2">
+            <Label htmlFor="password">Password</Label>
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <Input
             id="password"
             name="password"
@@ -80,6 +88,15 @@ export function LoginForm({ errorFromQuery }: LoginFormProps) {
         New to AbujaRentals?{" "}
         <Link href="/auth/signup" className="font-medium text-foreground underline-offset-4 hover:underline">
           Create an account
+        </Link>
+      </p>
+      <p className="text-center text-sm text-muted-foreground">
+        Or{" "}
+        <Link
+          href="/auth/forgot-password"
+          className="font-medium text-foreground underline-offset-4 hover:underline"
+        >
+          use a magic link / reset password
         </Link>
       </p>
     </div>

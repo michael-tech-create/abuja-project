@@ -57,6 +57,18 @@ export type Profile = {
   kyc_status: KycStatus;
   is_active: boolean;
   onboarding_completed: boolean;
+  nin_number: string | null;
+  nin_verified_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type Review = {
+  id: string;
+  property_id: string;
+  user_id: string;
+  rating: number;
+  comment: string;
   created_at: string;
   updated_at: string;
 };
@@ -151,13 +163,20 @@ export type Database = {
     Tables: {
       profiles: {
         Row: Profile;
-        Insert: Omit<
-          Profile,
-          "created_at" | "updated_at" | "kyc_status" | "is_active" | "onboarding_completed"
-        > & {
+        Insert: {
+          id: string;
+          role?: UserRole;
+          full_name: string;
+          email: string;
+          phone?: string | null;
+          avatar_url?: string | null;
+          company_name?: string | null;
+          bio?: string | null;
           kyc_status?: KycStatus;
           is_active?: boolean;
           onboarding_completed?: boolean;
+          nin_number?: string | null;
+          nin_verified_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -217,11 +236,27 @@ export type Database = {
       };
       favorites: {
         Row: Favorite;
-        Insert: Omit<Favorite, "id" | "created_at"> & {
+        Insert: {
           id?: string;
+          user_id: string;
+          property_id: string;
           created_at?: string;
         };
         Update: Partial<Favorite>;
+        Relationships: [];
+      };
+      reviews: {
+        Row: Review;
+        Insert: {
+          id?: string;
+          property_id: string;
+          user_id: string;
+          rating: number;
+          comment: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Review>;
         Relationships: [];
       };
       conversations: {

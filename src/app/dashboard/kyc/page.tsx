@@ -34,7 +34,9 @@ export default async function DashboardKycPage({ searchParams }: PageProps) {
 
   const documents = await attachViewUrls(await getMyKycDocuments(user.id));
   const canSubmit =
-    profile.kyc_status === "unsubmitted" || profile.kyc_status === "rejected";
+    profile.kyc_status === "unsubmitted" ||
+    profile.kyc_status === "rejected" ||
+    profile.kyc_status === "pending";
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -54,18 +56,34 @@ export default async function DashboardKycPage({ searchParams }: PageProps) {
             <StatusPill status={profile.kyc_status} kind="kyc" />
           </div>
           <p className="text-sm text-muted-foreground">
-            Upload NIN, C of O, agency licence, or utility bill photos/PDFs
-            here — not in the property photo gallery. After an admin approves
-            your KYC, you can publish listings to Browse.
+            Enter your NIN for automated Dojah verification, and upload supporting
+            docs (NIN slip, C of O, licence). This is separate from property
+            photos. Once verified, publish listings to Browse yourself.
           </p>
         </div>
 
+        {(query.success === "verified" || query.success === "verified_mock") && (
+          <Alert className="rounded-3xl border-border/70 bg-card">
+            <AlertTitle>KYC auto-verified</AlertTitle>
+            <AlertDescription>
+              {query.success === "verified_mock"
+                ? "NIN format passed (mock mode — add DOJAH_APP_ID + DOJAH_SECRET_KEY on Vercel for live Dojah checks). "
+                : "Your NIN was verified with Dojah. "}
+              You can now{" "}
+              <Link href="/dashboard/listings" className="underline">
+                publish listings
+              </Link>
+              .
+            </AlertDescription>
+          </Alert>
+        )}
+
         {query.success === "submitted" && (
           <Alert className="rounded-3xl border-border/70 bg-card">
-            <AlertTitle>Submitted for review</AlertTitle>
+            <AlertTitle>Submitted</AlertTitle>
             <AlertDescription>
-              Your documents are pending. An admin will review them in{" "}
-              <code>/admin/kyc</code>. Then open a listing and click Publish.
+              Documents saved. If NIN verification succeeded, your KYC is
+              verified automatically.
             </AlertDescription>
           </Alert>
         )}

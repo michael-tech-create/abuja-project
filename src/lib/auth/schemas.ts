@@ -44,6 +44,22 @@ export const onboardingSchema = z
     }
   });
 
+export const emailOnlySchema = z.object({
+  email: z.string().email("Enter a valid email"),
+});
+
+export const updatePasswordSchema = z
+  .object({
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
+
 export type LoginInput = z.infer<typeof loginSchema>;
 export type SignupInput = z.infer<typeof signupSchema>;
 export type OnboardingInput = z.infer<typeof onboardingSchema>;
+export type EmailOnlyInput = z.infer<typeof emailOnlySchema>;
+export type UpdatePasswordInput = z.infer<typeof updatePasswordSchema>;

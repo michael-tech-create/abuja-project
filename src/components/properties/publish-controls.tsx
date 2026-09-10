@@ -66,8 +66,8 @@ export function PublishControls({
     return (
       <div className="soft-card space-y-3 p-4">
         <p className="text-sm text-muted-foreground">
-          Upload your KYC documents (NIN, C of O, licence) first — not in the
-          property photo gallery. After an admin approves KYC, you can publish.
+          Verify your NIN (automated) and upload docs at KYC — not in the
+          property photo gallery. Once verified, you can publish.
         </p>
         <p className="text-xs text-muted-foreground">
           Current KYC status:{" "}
