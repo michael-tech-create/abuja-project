@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { cookies, headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import {
@@ -14,6 +14,7 @@ import {
   signupRoles,
   signupSchema,
 } from "@/lib/auth/schemas";
+import { resolveOrigin } from "@/lib/site-url";
 import { createClient, hasSupabaseEnv } from "@/lib/supabase/server";
 
 export type AuthActionState = {
@@ -27,16 +28,6 @@ function missingSupabaseState(): AuthActionState {
     error:
       "Supabase is not configured. Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to .env.local.",
   };
-}
-
-async function resolveOrigin() {
-  const headerStore = await headers();
-  const origin = headerStore.get("origin");
-  if (origin) return origin;
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-  const proto = headerStore.get("x-forwarded-proto") ?? "http";
-  if (host) return `${proto}://${host}`;
-  return process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 }
 
 export async function signUpAction(

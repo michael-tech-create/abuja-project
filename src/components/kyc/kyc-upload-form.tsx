@@ -109,7 +109,10 @@ export function KycUploadForm({ userId, role }: KycUploadFormProps) {
         path,
         file,
         accessToken: session.access_token,
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!.replace(
+          /\/rest\/v1\/?$/i,
+          "",
+        ).replace(/\/$/, ""),
         onProgress: (p) => setUploadPercent(p.percent),
       });
 
