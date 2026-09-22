@@ -27,8 +27,14 @@ import {
   propertyTypeLabel,
 } from "@/lib/properties/format";
 import { getPublicProperty } from "@/lib/properties/queries";
+import { getUnitsForProperty } from "@/lib/properties/units";
 import { getPropertyReviews } from "@/lib/reviews/queries";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
+import Button from "@mui/material/Button";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import Typography from "@mui/material/Typography";
+import NavigationIcon from "@mui/icons-material/Navigation";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -69,7 +75,13 @@ export default async function PublicPropertyPage({
     ? await isPropertyFavorited(user.id, property.id)
     : false;
   const { reviews, average, count } = await getPropertyReviews(property.id);
+  const units = await getUnitsForProperty(property.id);
   const canReview = Boolean(user);
+  const hasCoords =
+    property.latitude != null && property.longitude != null;
+  const navigateHref = hasCoords
+    ? `https://www.google.com/maps/dir/?api=1&destination=${property.latitude},${property.longitude}`
+    : null;
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
@@ -150,9 +162,73 @@ export default async function PublicPropertyPage({
               </p>
 
               <p className="font-heading text-3xl font-semibold tracking-tight sm:text-4xl">
-                {formatRentLabel(property.price)}
+                {property.is_multi_unit && units.length > 0
+                  ? `From ${formatRentLabel(
+                      Math.min(...units.map((u) => Number(u.price))),
+                    )}`
+                  : formatRentLabel(property.price)}
               </p>
+
+              <Stack
+                direction="row"
+                spacing={1}
+                useFlexGap
+                sx={{ flexWrap: "wrap" }}
+              >
+                {navigateHref && (
+                  <Button
+                    component="a"
+                    href={navigateHref}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="contained"
+                    startIcon={<NavigationIcon />}
+                  >
+                    Navigate to building
+                  </Button>
+                )}
+                {property.is_multi_unit && (
+                  <Chip
+                    label={`${units.length} apartments`}
+                    color="secondary"
+                    variant="outlined"
+                  />
+                )}
+              </Stack>
             </div>
+
+            {units.length > 0 && (
+              <section className="space-y-3">
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                  Apartments in this building
+                </Typography>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {units.map((unit) => (
+                    <div
+                      key={unit.id}
+                      className="rounded-2xl border border-border bg-sand/40 p-4"
+                    >
+                      <Typography sx={{ fontWeight: 700 }}>{unit.label}</Typography>
+                      <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                        {formatRentLabel(unit.price)}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {[
+                          unit.bedrooms != null ? `${unit.bedrooms} bed` : null,
+                          unit.bathrooms != null
+                            ? `${unit.bathrooms} bath`
+                            : null,
+                          unit.area_sqm != null ? `${unit.area_sqm} sqm` : null,
+                          unit.is_available ? "Available" : "Taken",
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </Typography>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <Spec

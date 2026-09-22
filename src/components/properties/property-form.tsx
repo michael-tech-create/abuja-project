@@ -1,9 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useActionState, useState } from "react";
 
 import { ImageUploader } from "@/components/properties/image-uploader";
 import { VideoUploader } from "@/components/properties/video-uploader";
+import {
+  UnitsEditor,
+  createEmptyUnit,
+  type UnitDraft,
+} from "@/components/properties/units-editor";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +22,23 @@ import {
   updatePropertyAction,
   type PropertyActionState,
 } from "@/lib/properties/actions";
-import type { Property } from "@/types/database";
+import type { AbujaDistrict, Property, PropertyUnit } from "@/types/database";
 import { ABUJA_DISTRICTS, PROPERTY_TYPES } from "@/types/database";
+
+const LocationPinPicker = dynamic(
+  () =>
+    import("@/components/properties/location-pin-picker").then(
+      (m) => m.LocationPinPicker,
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[280px] items-center justify-center rounded-2xl border border-dashed text-sm text-muted-foreground">
+        Loading map pin…
+      </div>
+    ),
+  },
+);
 
 const initialState: PropertyActionState = {};
 
@@ -25,15 +46,45 @@ type PropertyFormProps = {
   mode: "create" | "edit";
   ownerId: string;
   property?: Property;
+  initialUnits?: PropertyUnit[];
 };
 
-export function PropertyForm({ mode, ownerId, property }: PropertyFormProps) {
+export function PropertyForm({
+  mode,
+  ownerId,
+  property,
+  initialUnits = [],
+}: PropertyFormProps) {
   const action = mode === "create" ? createPropertyAction : updatePropertyAction;
   const [state, formAction, pending] = useActionState(action, initialState);
   const [existingImages, setExistingImages] = useState(property?.images ?? []);
   const [newFiles, setNewFiles] = useState<File[]>([]);
   const [existingVideos, setExistingVideos] = useState(property?.videos ?? []);
   const [uploadedVideos, setUploadedVideos] = useState<string[]>([]);
+  const [district, setDistrict] = useState<AbujaDistrict>(
+    property?.district ?? "gwarinpa",
+  );
+  const [coords, setCoords] = useState<{ lat: number | null; lng: number | null }>(
+    {
+      lat: property?.latitude ?? null,
+      lng: property?.longitude ?? null,
+    },
+  );
+  const [multiUnit, setMultiUnit] = useState(
+    Boolean(property?.is_multi_unit) || initialUnits.length > 0,
+  );
+  const [units, setUnits] = useState<UnitDraft[]>(
+    initialUnits.length > 0
+      ? initialUnits.map((u) => ({
+          key: u.id,
+          label: u.label,
+          bedrooms: u.bedrooms != null ? String(u.bedrooms) : "",
+          bathrooms: u.bathrooms != null ? String(u.bathrooms) : "",
+          price: String(u.price),
+          areaSqm: u.area_sqm != null ? String(u.area_sqm) : "",
+        }))
+      : [createEmptyUnit()],
+  );
 
   const selectedAmenities = new Set(property?.amenities ?? []);
 
@@ -105,7 +156,7 @@ export function PropertyForm({ mode, ownerId, property }: PropertyFormProps) {
                 name="propertyType"
                 required
                 defaultValue={property?.property_type ?? "apartment"}
-                className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                className="app-select"
               >
                 {PROPERTY_TYPES.map((type) => (
                   <option key={type.value} value={type.value}>
@@ -121,16 +172,29 @@ export function PropertyForm({ mode, ownerId, property }: PropertyFormProps) {
                 id="district"
                 name="district"
                 required
-                defaultValue={property?.district ?? "gwarinpa"}
-                className="flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                value={district}
+                onChange={(e) =>
+                  setDistrict(e.target.value as AbujaDistrict)
+                }
+                className="app-select"
               >
-                {ABUJA_DISTRICTS.map((district) => (
-                  <option key={district.value} value={district.value}>
-                    {district.label}
+                {ABUJA_DISTRICTS.map((d) => (
+                  <option key={d.value} value={d.value}>
+                    {d.label}
                   </option>
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="buildingName">Building / estate name (optional)</Label>
+            <Input
+              id="buildingName"
+              name="buildingName"
+              placeholder="e.g. Palm Grove Residences"
+              defaultValue={property?.building_name ?? ""}
+            />
           </div>
 
           <div className="space-y-2">
@@ -142,11 +206,51 @@ export function PropertyForm({ mode, ownerId, property }: PropertyFormProps) {
               defaultValue={property?.address_line ?? ""}
             />
           </div>
+
+          <div className="space-y-3">
+            <Label>Building location (required)</Label>
+            <LocationPinPicker
+              latitude={coords.lat}
+              longitude={coords.lng}
+              district={district}
+              onChange={({ lat, lng }) => setCoords({ lat, lng })}
+            />
+          </div>
+
+          <label className="flex items-center gap-2 rounded-xl border border-border px-3 py-3 text-sm">
+            <input
+              type="checkbox"
+              name="isMultiUnit"
+              checked={multiUnit}
+              onChange={(e) => {
+                setMultiUnit(e.target.checked);
+                if (e.target.checked && units.length === 0) {
+                  setUnits([createEmptyUnit()]);
+                }
+              }}
+              className="size-4 accent-primary"
+            />
+            <span>
+              This post has <strong>multiple apartments</strong> in one building
+            </span>
+          </label>
         </section>
+
+        {multiUnit && (
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+              Apartments
+            </h2>
+            <UnitsEditor units={units} onChange={setUnits} />
+            <p className="text-xs text-muted-foreground">
+              Building card price will show “From ₦…” using the cheapest unit.
+            </p>
+          </section>
+        )}
 
         <section className="space-y-4">
           <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-            Pricing & size
+            {multiUnit ? "Default / headline pricing" : "Pricing & size"}
           </h2>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

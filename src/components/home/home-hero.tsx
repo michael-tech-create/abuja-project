@@ -81,7 +81,7 @@ export function HomeHero({ profileName }: HomeHeroProps) {
               <select
                 name="district"
                 defaultValue=""
-                className="h-10 w-full bg-transparent text-sm outline-none"
+                className="app-select h-10 border-0 bg-transparent shadow-none focus-visible:ring-0"
               >
                 <option value="">All Abuja districts</option>
                 <option value="maitama">Maitama</option>

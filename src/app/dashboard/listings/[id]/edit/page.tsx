@@ -6,6 +6,7 @@ import { PropertyForm } from "@/components/properties/property-form";
 import { SiteHeader } from "@/components/layout/site-header";
 import { canManageListings } from "@/lib/properties/access";
 import { getManageableProperty } from "@/lib/properties/queries";
+import { getUnitsForProperty } from "@/lib/properties/units";
 import { getCurrentProfile, getSessionUser } from "@/lib/auth/session";
 
 type PageProps = {
@@ -34,6 +35,8 @@ export default async function EditListingPage({ params }: PageProps) {
 
   if (!property) notFound();
 
+  const units = await getUnitsForProperty(property.id);
+
   return (
     <div className="flex min-h-full flex-1 flex-col">
       <SiteHeader profile={profile} />
@@ -47,11 +50,15 @@ export default async function EditListingPage({ params }: PageProps) {
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">Edit listing</h1>
           <p className="text-sm text-muted-foreground">
-            Update details or photos. Saving a rejected listing re-queues it for
-            review.
+            Update pin location, apartments in the building, photos, and details.
           </p>
         </div>
-        <PropertyForm mode="edit" ownerId={property.owner_id} property={property} />
+        <PropertyForm
+          mode="edit"
+          ownerId={property.owner_id}
+          property={property}
+          initialUnits={units}
+        />
       </main>
     </div>
   );

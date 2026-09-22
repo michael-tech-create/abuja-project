@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Fraunces } from "next/font/google";
 
+import { MuiProvider } from "@/components/providers/mui-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 import "./globals.css";
@@ -31,8 +32,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${dmSans.variable} ${fraunces.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col font-sans">
-        {children}
-        <Toaster />
+        <MuiProvider>
+          {children}
+          <Toaster />
+        </MuiProvider>
       </body>
     </html>
   );

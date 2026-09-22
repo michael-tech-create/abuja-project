@@ -91,12 +91,30 @@ export type Property = {
   amenities: string[];
   images: string[];
   videos: string[];
+  building_name: string | null;
+  is_multi_unit: boolean;
   verification_status: VerificationStatus;
   is_verified: boolean;
   is_published: boolean;
   rejection_reason: string | null;
   verified_at: string | null;
   verified_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PropertyUnit = {
+  id: string;
+  property_id: string;
+  label: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  area_sqm: number | null;
+  price: number;
+  currency: string;
+  amenities: string[];
+  images: string[];
+  is_available: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -203,6 +221,8 @@ export type Database = {
           amenities?: string[];
           images?: string[];
           videos?: string[];
+          building_name?: string | null;
+          is_multi_unit?: boolean;
           verification_status?: VerificationStatus;
           is_published?: boolean;
           rejection_reason?: string | null;
@@ -212,6 +232,26 @@ export type Database = {
           updated_at?: string;
         };
         Update: Partial<Omit<Property, "is_verified" | "id">>;
+        Relationships: [];
+      };
+      property_units: {
+        Row: PropertyUnit;
+        Insert: {
+          id?: string;
+          property_id: string;
+          label: string;
+          bedrooms?: number | null;
+          bathrooms?: number | null;
+          area_sqm?: number | null;
+          price: number;
+          currency?: string;
+          amenities?: string[];
+          images?: string[];
+          is_available?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<PropertyUnit>;
         Relationships: [];
       };
       verification_documents: {

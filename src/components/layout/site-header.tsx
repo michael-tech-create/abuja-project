@@ -1,7 +1,6 @@
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
-import { signOutAction } from "@/lib/auth/actions";
+import { NavDropdown } from "@/components/layout/nav-dropdown";
 import { isAdminProfile } from "@/lib/admin/access";
 import { canManageListings } from "@/lib/properties/access";
 import { APP_NAME } from "@/lib/constants";
@@ -12,82 +11,66 @@ type SiteHeaderProps = {
 };
 
 export function SiteHeader({ profile }: SiteHeaderProps) {
+  const accountItems = profile
+    ? [
+        { href: "/dashboard", label: "Dashboard" },
+        { href: "/messages", label: "Messages" },
+        ...(canManageListings(profile)
+          ? [
+              { href: "/dashboard/listings", label: "My listings" },
+              { href: "/dashboard/listings/new", label: "Post building" },
+              { href: "/dashboard/kyc", label: "KYC / NIN" },
+            ]
+          : [{ href: "/browse", label: "Browse homes" }]),
+        ...(isAdminProfile(profile)
+          ? [{ href: "/admin", label: "Admin portal" }]
+          : []),
+      ]
+    : [];
+
   return (
-    <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-primary/15 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6">
         <Link
           href="/"
-          className="font-heading text-lg font-semibold tracking-tight text-foreground"
+          className="font-heading text-lg font-semibold tracking-tight text-primary"
         >
           {APP_NAME}
         </Link>
 
-        <nav className="flex items-center gap-1 sm:gap-2">
+        <nav className="flex items-center gap-2">
           <Link
             href="/browse"
-            className="inline-flex h-9 items-center rounded-full px-3 text-sm font-medium text-foreground/80 hover:bg-sand hover:text-foreground"
+            className="inline-flex h-9 items-center rounded-full px-3 text-sm font-semibold text-primary/90 hover:bg-secondary"
           >
             Browse
           </Link>
-          <Link
-            href="/messages"
-            className="inline-flex h-9 items-center rounded-full px-3 text-sm font-medium text-foreground/80 hover:bg-sand hover:text-foreground"
-          >
-            Messages
-          </Link>
+
           {profile ? (
             <>
               <Link
-                href="/dashboard"
-                className="hidden h-9 items-center rounded-full px-3 text-sm font-medium text-foreground/80 hover:bg-sand hover:text-foreground sm:inline-flex"
+                href="/messages"
+                className="hidden h-9 items-center rounded-full px-3 text-sm font-semibold text-primary/90 hover:bg-secondary sm:inline-flex"
               >
-                Dashboard
+                Messages
               </Link>
-              {canManageListings(profile) && (
-                <>
-                  <Link
-                    href="/dashboard/listings"
-                    className="hidden h-9 items-center rounded-full px-3 text-sm font-medium text-foreground/80 hover:bg-sand hover:text-foreground md:inline-flex"
-                  >
-                    Listings
-                  </Link>
-                  <Link
-                    href="/dashboard/kyc"
-                    className="hidden h-9 items-center rounded-full px-3 text-sm font-medium text-foreground/80 hover:bg-sand hover:text-foreground md:inline-flex"
-                  >
-                    KYC
-                  </Link>
-                </>
-              )}
-              {isAdminProfile(profile) && (
-                <Link
-                  href="/admin"
-                  className="inline-flex h-9 items-center rounded-full px-3 text-sm font-medium text-foreground/80 hover:bg-sand hover:text-foreground"
-                >
-                  Admin
-                </Link>
-              )}
-              <form action={signOutAction}>
-                <Button
-                  type="submit"
-                  variant="outline"
-                  className="rounded-full border-border/80"
-                >
-                  Sign out
-                </Button>
-              </form>
+              <NavDropdown
+                label="Account"
+                items={accountItems}
+                showSignOut
+              />
             </>
           ) : (
             <>
               <Link
                 href="/auth/login"
-                className="inline-flex h-9 items-center rounded-full px-3 text-sm font-medium text-foreground/80 hover:bg-sand hover:text-foreground"
+                className="inline-flex h-9 items-center rounded-full border border-primary/30 bg-white px-3 text-sm font-semibold text-primary hover:bg-secondary"
               >
                 Sign in
               </Link>
               <Link
                 href="/auth/signup"
-                className="inline-flex h-9 items-center rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                className="inline-flex h-9 items-center rounded-full bg-primary px-4 text-sm font-semibold text-white hover:bg-primary/90"
               >
                 Get started
               </Link>

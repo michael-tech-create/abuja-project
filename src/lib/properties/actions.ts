@@ -49,6 +49,41 @@ function parsePropertyVideos(formData: FormData): string[] {
   return [...existing, ...uploaded].slice(0, 3);
 }
 
+function parseCoord(formData: FormData, key: string): number | null {
+  const raw = formData.get(key);
+  if (raw == null || raw === "") return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
+type ParsedUnit = {
+  label: string;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  area_sqm: number | null;
+  price: number;
+};
+
+function parseUnitsJson(formData: FormData): ParsedUnit[] {
+  const raw = String(formData.get("unitsJson") ?? "");
+  if (!raw.trim()) return [];
+  try {
+    const parsed = JSON.parse(raw) as Array<Record<string, string>>;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((u) => ({
+        label: String(u.label ?? "").trim(),
+        bedrooms: u.bedrooms ? Number(u.bedrooms) : null,
+        bathrooms: u.bathrooms ? Number(u.bathrooms) : null,
+        area_sqm: u.areaSqm ? Number(u.areaSqm) : null,
+        price: Number(u.price),
+      }))
+      .filter((u) => u.label && Number.isFinite(u.price) && u.price > 0);
+  } catch {
+    return [];
+  }
+}
+
 function collectImageFiles(formData: FormData): File[] {
   return formData
     .getAll("images")
@@ -118,9 +153,24 @@ export async function createPropertyAction(
   const limitError = enforceImageLimit(0, files.length);
   if (limitError) return { error: limitError };
   const videos = parsePropertyVideos(formData);
+  const latitude = parseCoord(formData, "latitude");
+  const longitude = parseCoord(formData, "longitude");
+  const isMultiUnit = formData.get("isMultiUnit") === "on" || formData.get("isMultiUnit") === "true";
+  const units = parseUnitsJson(formData);
+  const buildingName = String(formData.get("buildingName") ?? "").trim() || null;
+
+  if (isMultiUnit && units.length === 0) {
+    return { error: "Add at least one apartment unit for a multi-unit building." };
+  }
+  if (latitude == null || longitude == null) {
+    return { error: "Drop a map pin on the building location before saving." };
+  }
 
   const supabase = await createClient();
   const input = parsed.data;
+  const listPrice = isMultiUnit
+    ? Math.min(...units.map((u) => u.price))
+    : input.price;
 
   const { data: created, error: insertError } = await supabase
     .from("properties")
@@ -131,13 +181,17 @@ export async function createPropertyAction(
       property_type: input.propertyType,
       district: input.district,
       address_line: input.addressLine?.trim() || null,
-      price: input.price,
-      bedrooms: input.bedrooms,
-      bathrooms: input.bathrooms,
-      area_sqm: input.areaSqm,
+      latitude,
+      longitude,
+      price: listPrice,
+      bedrooms: isMultiUnit ? units[0]?.bedrooms ?? null : input.bedrooms,
+      bathrooms: isMultiUnit ? units[0]?.bathrooms ?? null : input.bathrooms,
+      area_sqm: isMultiUnit ? units[0]?.area_sqm ?? null : input.areaSqm,
       amenities: input.amenities,
       images: [],
       videos,
+      building_name: buildingName,
+      is_multi_unit: isMultiUnit,
       verification_status: "pending",
       is_published: false,
     })
@@ -145,7 +199,31 @@ export async function createPropertyAction(
     .single();
 
   if (insertError || !created) {
+    if (/is_multi_unit|building_name|schema cache/i.test(insertError?.message ?? "")) {
+      return {
+        error:
+          "Database needs STEP7. Run scripts/STEP7-property-units.sql in Supabase SQL Editor.",
+      };
+    }
     return { error: insertError?.message ?? "Could not create listing." };
+  }
+
+  if (isMultiUnit && units.length > 0) {
+    const { error: unitsError } = await supabase.from("property_units").insert(
+      units.map((u) => ({
+        property_id: created.id,
+        label: u.label,
+        bedrooms: u.bedrooms,
+        bathrooms: u.bathrooms,
+        area_sqm: u.area_sqm,
+        price: u.price,
+        amenities: input.amenities,
+      })),
+    );
+    if (unitsError) {
+      await supabase.from("properties").delete().eq("id", created.id);
+      return { error: unitsError.message };
+    }
   }
 
   const { urls, error: uploadError } = await uploadPropertyImages({
@@ -214,6 +292,23 @@ export async function updatePropertyAction(
   const limitError = enforceImageLimit(existingImages.length, files.length);
   if (limitError) return { error: limitError };
   const videos = parsePropertyVideos(formData);
+  const latitude = parseCoord(formData, "latitude");
+  const longitude = parseCoord(formData, "longitude");
+  const isMultiUnit =
+    formData.get("isMultiUnit") === "on" ||
+    formData.get("isMultiUnit") === "true";
+  const units = parseUnitsJson(formData);
+  const buildingName =
+    String(formData.get("buildingName") ?? "").trim() || null;
+
+  if (isMultiUnit && units.length === 0) {
+    return {
+      error: "Add at least one apartment unit for a multi-unit building.",
+    };
+  }
+  if (latitude == null || longitude == null) {
+    return { error: "Drop a map pin on the building location before saving." };
+  }
 
   const supabase = await createClient();
   const isAdmin = profile.role === "admin";
@@ -253,10 +348,15 @@ export async function updatePropertyAction(
 
   const images = [...existingImages, ...newUrls];
   const input = parsed.data;
+  const listPrice = isMultiUnit
+    ? Math.min(...units.map((u) => u.price))
+    : input.price;
 
   // Editing a rejected listing re-queues it for review
   const nextStatus =
-    existing.verification_status === "rejected" ? "pending" : existing.verification_status;
+    existing.verification_status === "rejected"
+      ? "pending"
+      : existing.verification_status;
 
   const { error: updateError } = await supabase
     .from("properties")
@@ -266,15 +366,20 @@ export async function updatePropertyAction(
       property_type: input.propertyType,
       district: input.district,
       address_line: input.addressLine?.trim() || null,
-      price: input.price,
-      bedrooms: input.bedrooms,
-      bathrooms: input.bathrooms,
-      area_sqm: input.areaSqm,
+      latitude,
+      longitude,
+      price: listPrice,
+      bedrooms: isMultiUnit ? units[0]?.bedrooms ?? null : input.bedrooms,
+      bathrooms: isMultiUnit ? units[0]?.bathrooms ?? null : input.bathrooms,
+      area_sqm: isMultiUnit ? units[0]?.area_sqm ?? null : input.areaSqm,
       amenities: input.amenities,
       images,
       videos,
+      building_name: buildingName,
+      is_multi_unit: isMultiUnit,
       verification_status: nextStatus,
-      ...(nextStatus === "pending" && existing.verification_status === "rejected"
+      ...(nextStatus === "pending" &&
+      existing.verification_status === "rejected"
         ? {
             rejection_reason: null,
             is_published: false,
@@ -287,6 +392,26 @@ export async function updatePropertyAction(
 
   if (updateError) {
     return { error: updateError.message };
+  }
+
+  if (isMultiUnit) {
+    await supabase.from("property_units").delete().eq("property_id", propertyId);
+    const { error: unitsError } = await supabase.from("property_units").insert(
+      units.map((u) => ({
+        property_id: propertyId,
+        label: u.label,
+        bedrooms: u.bedrooms,
+        bathrooms: u.bathrooms,
+        area_sqm: u.area_sqm,
+        price: u.price,
+        amenities: input.amenities,
+      })),
+    );
+    if (unitsError) {
+      return { error: unitsError.message };
+    }
+  } else {
+    await supabase.from("property_units").delete().eq("property_id", propertyId);
   }
 
   revalidatePath("/dashboard/listings");

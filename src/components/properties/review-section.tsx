@@ -67,7 +67,7 @@ export function ReviewSection({
                 name="rating"
                 required
                 defaultValue="5"
-                className="flex h-9 w-full max-w-xs rounded-xl border border-input bg-transparent px-3 text-sm"
+                className="app-select max-w-xs"
               >
                 {[5, 4, 3, 2, 1].map((n) => (
                   <option key={n} value={n}>

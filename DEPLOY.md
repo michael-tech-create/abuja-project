@@ -58,11 +58,10 @@ If a new environment uses a fresh Supabase project, run `INSTALL.sql` again ther
 6. Publish listing → appears on `/browse`
 7. Tenant: message landlord from a listing
 
-## 8. Extra SQL (likes already exist; reviews + NIN columns)
+## 8. Extra SQL (run in order if missing)
 
-Run in SQL Editor if not applied yet:
-
-`scripts/STEP6-reviews-nin.sql`
+1. `scripts/STEP6-reviews-nin.sql` — reviews + NIN columns  
+2. `scripts/STEP7-property-units.sql` — multi-apartment units + realtime tables
 
 ## 9. Dojah NIN auto-KYC (Vercel env)
 

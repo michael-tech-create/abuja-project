@@ -173,7 +173,7 @@ export function KycUploadForm({ userId, role }: KycUploadFormProps) {
           id="docType"
           value={activeType}
           onChange={(e) => setActiveType(e.target.value as DocumentType)}
-          className="flex h-9 w-full rounded-xl border border-input bg-transparent px-3 text-sm"
+          className="app-select"
         >
           {suggested.map((opt) => (
             <option key={opt.value} value={opt.value}>

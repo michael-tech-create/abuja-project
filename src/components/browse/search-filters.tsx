@@ -16,8 +16,7 @@ type SearchFiltersProps = {
   resultCount: number;
 };
 
-const selectClassName =
-  "flex h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50";
+const selectClassName = "app-select h-9";
 
 export function SearchFilters({ filters, resultCount }: SearchFiltersProps) {
   const active = countActiveFilters(filters);
