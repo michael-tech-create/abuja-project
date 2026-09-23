@@ -1,4 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import * as React from "react";
+
+// MUI Imports
+import FormControl from "@mui/material/FormControl";
+import Select from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +24,27 @@ type SearchFiltersProps = {
   resultCount: number;
 };
 
-const selectClassName = "app-select h-9";
+// Custom MUI styles to perfectly match your shadcn/tailwind "h-9" inputs
+const muiSelectSx = {
+  height: "36px", // matches h-9
+  borderRadius: "calc(var(--radius) - 2px)",
+  fontSize: "0.875rem", // text-sm
+  backgroundColor: "transparent",
+  "& .MuiSelect-select": {
+    paddingTop: "6px",
+    paddingBottom: "6px",
+  },
+  "& .MuiOutlinedInput-notchedOutline": {
+    borderColor: "hsl(var(--input))",
+  },
+  "&:hover .MuiOutlinedInput-notchedOutline": {
+    borderColor: "hsl(var(--ring))",
+  },
+  "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    borderColor: "hsl(var(--ring))",
+    borderWidth: "1px",
+  },
+};
 
 export function SearchFilters({ filters, resultCount }: SearchFiltersProps) {
   const active = countActiveFilters(filters);
@@ -35,67 +63,83 @@ export function SearchFilters({ filters, resultCount }: SearchFiltersProps) {
         <div className="space-y-1.5 lg:col-span-2">
           <Label htmlFor="q">Search</Label>
           <Input
+            key={`q-${filters.q ?? ""}`}
             id="q"
             name="q"
             placeholder="Estate, street, keyword…"
             defaultValue={filters.q}
+            className="h-9"
           />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="district">District</Label>
-          <select
-            id="district"
-            name="district"
-            defaultValue={filters.district ?? ""}
-            className={selectClassName}
-          >
-            <option value="">All districts</option>
-            {ABUJA_DISTRICTS.map((d) => (
-              <option key={d.value} value={d.value}>
-                {d.label}
-              </option>
-            ))}
-          </select>
+          <FormControl fullWidth>
+            <Select
+              key={`district-${filters.district ?? ""}`}
+              id="district"
+              name="district"
+              defaultValue={filters.district ?? ""}
+              displayEmpty
+              sx={muiSelectSx}
+              inputProps={{ "aria-label": "District" }}
+            >
+              <MenuItem value="">All districts</MenuItem>
+              {ABUJA_DISTRICTS.map((d) => (
+                <MenuItem key={d.value} value={d.value}>
+                  {d.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="type">Type</Label>
-          <select
-            id="type"
-            name="type"
-            defaultValue={filters.type ?? ""}
-            className={selectClassName}
-          >
-            <option value="">All types</option>
-            {PROPERTY_TYPES.map((t) => (
-              <option key={t.value} value={t.value}>
-                {t.label}
-              </option>
-            ))}
-          </select>
+          <FormControl fullWidth>
+            <Select
+              key={`type-${filters.type ?? ""}`}
+              id="type"
+              name="type"
+              defaultValue={filters.type ?? ""}
+              displayEmpty
+              sx={muiSelectSx}
+            >
+              <MenuItem value="">All types</MenuItem>
+              {PROPERTY_TYPES.map((t) => (
+                <MenuItem key={t.value} value={t.value}>
+                  {t.label}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="budget">Budget class</Label>
-          <select
-            id="budget"
-            name="budget"
-            defaultValue={filters.budget ?? ""}
-            className={selectClassName}
-          >
-            <option value="">All budgets</option>
-            {BUDGET_TIERS.map((tier) => (
-              <option key={tier.value} value={tier.value}>
-                {tier.label} — {tier.hint}
-              </option>
-            ))}
-          </select>
+          <FormControl fullWidth>
+            <Select
+              key={`budget-${filters.budget ?? ""}`}
+              id="budget"
+              name="budget"
+              defaultValue={filters.budget ?? ""}
+              displayEmpty
+              sx={muiSelectSx}
+            >
+              <MenuItem value="">All budgets</MenuItem>
+              {BUDGET_TIERS.map((tier) => (
+                <MenuItem key={tier.value} value={tier.value}>
+                  {tier.label} — {tier.hint}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="minPrice">Min rent (₦/yr)</Label>
           <Input
+            key={`min-${filters.minPrice ?? ""}`}
             id="minPrice"
             name="minPrice"
             type="number"
@@ -103,12 +147,14 @@ export function SearchFilters({ filters, resultCount }: SearchFiltersProps) {
             step={100000}
             placeholder="e.g. 2000000"
             defaultValue={filters.minPrice ?? ""}
+            className="h-9"
           />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="maxPrice">Max rent (₦/yr)</Label>
           <Input
+            key={`max-${filters.maxPrice ?? ""}`}
             id="maxPrice"
             name="maxPrice"
             type="number"
@@ -116,48 +162,57 @@ export function SearchFilters({ filters, resultCount }: SearchFiltersProps) {
             step={100000}
             placeholder="e.g. 10000000"
             defaultValue={filters.maxPrice ?? ""}
+            className="h-9"
           />
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="beds">Min beds</Label>
-          <select
-            id="beds"
-            name="beds"
-            defaultValue={filters.beds ?? ""}
-            className={selectClassName}
-          >
-            <option value="">Any</option>
-            {[1, 2, 3, 4, 5].map((n) => (
-              <option key={n} value={n}>
-                {n}+
-              </option>
-            ))}
-          </select>
+          <FormControl fullWidth>
+            <Select
+              key={`beds-${filters.beds ?? ""}`}
+              id="beds"
+              name="beds"
+              defaultValue={filters.beds ?? ""}
+              displayEmpty
+              sx={muiSelectSx}
+            >
+              <MenuItem value="">Any</MenuItem>
+              {[1, 2, 3, 4, 5].map((n) => (
+                <MenuItem key={n} value={n}>
+                  {n}+
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </div>
 
         <div className="space-y-1.5">
           <Label htmlFor="sort">Sort</Label>
-          <select
-            id="sort"
-            name="sort"
-            defaultValue={filters.sort}
-            className={selectClassName}
-          >
-            <option value="newest">Newest</option>
-            <option value="price_asc">Price: low to high</option>
-            <option value="price_desc">Price: high to low</option>
-          </select>
+          <FormControl fullWidth>
+            <Select
+              key={`sort-${filters.sort ?? "newest"}`}
+              id="sort"
+              name="sort"
+              defaultValue={filters.sort ?? "newest"}
+              displayEmpty
+              sx={muiSelectSx}
+            >
+              <MenuItem value="newest">Newest</MenuItem>
+              <MenuItem value="price_asc">Price: low to high</MenuItem>
+              <MenuItem value="price_desc">Price: high to low</MenuItem>
+            </Select>
+          </FormControl>
         </div>
 
         <div className="flex items-end gap-2 md:col-span-2 lg:col-span-4">
-          <Button type="submit" className="h-8">
+          <Button type="submit" className="h-9">
             Apply filters
           </Button>
           {active > 0 && (
             <Link
               href={`/browse${filters.view === "map" ? "?view=map" : ""}`}
-              className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-sm font-medium hover:bg-muted"
+              className="inline-flex h-9 items-center rounded-lg border border-border px-3 text-sm font-medium hover:bg-muted"
             >
               Clear ({active})
             </Link>

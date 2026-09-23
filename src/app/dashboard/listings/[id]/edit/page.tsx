@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { PropertyForm } from "@/components/properties/property-form";
-import { SiteHeader } from "@/components/layout/site-header";
 import { canManageListings } from "@/lib/properties/access";
 import { getManageableProperty } from "@/lib/properties/queries";
 import { getUnitsForProperty } from "@/lib/properties/units";
@@ -39,7 +38,6 @@ export default async function EditListingPage({ params }: PageProps) {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <SiteHeader profile={profile} />
       <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
         <div className="mb-8 space-y-2">
           <Link

@@ -1,9 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import * as React from "react";
 import { motion } from "framer-motion";
 import { MapPinIcon, SearchIcon, ShieldCheckIcon } from "lucide-react";
+import Image from "next/image";
 
+// MUI Imports
+import FormControl from "@mui/material/FormControl";
+import Select, { SelectChangeEvent } from "@mui/material/Select";
+import MenuItem from "@mui/material/MenuItem";
+
+import { BrandLogo } from "@/components/brand/brand-logo";
+import { BRAND_HERO } from "@/lib/brand";
 import { HOME_STATS } from "@/lib/marketing/home-data";
 import { APP_NAME } from "@/lib/constants";
 
@@ -12,6 +21,12 @@ type HomeHeroProps = {
 };
 
 export function HomeHero({ profileName }: HomeHeroProps) {
+  const [district, setDistrict] = React.useState("");
+
+  const handleChange = (event: SelectChangeEvent) => {
+    setDistrict(event.target.value);
+  };
+
   return (
     <section className="relative overflow-hidden rounded-[2rem] border border-border/60 bg-gradient-to-br from-card via-sand/40 to-sage/30 px-6 py-12 sm:px-10 sm:py-16 lg:px-14">
       <motion.div
@@ -29,15 +44,18 @@ export function HomeHero({ profileName }: HomeHeroProps) {
 
       <div className="relative grid items-center gap-12 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="max-w-xl space-y-7">
-          <motion.p
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.45 }}
-            className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs font-medium tracking-wide text-muted-foreground uppercase backdrop-blur"
+            className="flex flex-wrap items-center gap-3"
           >
-            <ShieldCheckIcon className="size-3.5 text-sage-foreground" />
-            Abuja · Verified rentals · Nigeria
-          </motion.p>
+            <BrandLogo href="" imgClassName="h-14 w-auto rounded-xl" priority />
+            <span className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-card/80 px-3 py-1 text-xs font-medium tracking-wide text-muted-foreground uppercase backdrop-blur">
+              <ShieldCheckIcon className="size-3.5 text-sage-foreground" />
+              Abuja · Verified rentals · Nigeria
+            </span>
+          </motion.div>
 
           <motion.h1
             initial={{ opacity: 0, y: 18 }}
@@ -76,22 +94,35 @@ export function HomeHero({ profileName }: HomeHeroProps) {
                 className="h-10 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
               />
             </div>
+
             <div className="flex flex-1 items-center gap-2 border-t border-border/60 px-3 sm:border-t-0 sm:border-l">
               <MapPinIcon className="size-4 shrink-0 text-muted-foreground" />
-              <select
-                name="district"
-                defaultValue=""
-                className="app-select h-10 border-0 bg-transparent shadow-none focus-visible:ring-0"
-              >
-                <option value="">All Abuja districts</option>
-                <option value="maitama">Maitama</option>
-                <option value="wuse_2">Wuse II</option>
-                <option value="gwarinpa">Gwarinpa</option>
-                <option value="asokoro">Asokoro</option>
-                <option value="lugbe">Lugbe</option>
-                <option value="lifecamp">Life Camp</option>
-              </select>
+              <FormControl fullWidth variant="standard">
+                <Select
+                  name="district"
+                  value={district}
+                  onChange={handleChange}
+                  displayEmpty
+                  disableUnderline
+                  className="h-10 text-sm"
+                  sx={{
+                    "& .MuiSelect-select": {
+                      paddingY: "8px",
+                      color: "inherit",
+                    },
+                  }}
+                >
+                  <MenuItem value="">All Abuja districts</MenuItem>
+                  <MenuItem value="maitama">Maitama</MenuItem>
+                  <MenuItem value="wuse_2">Wuse II</MenuItem>
+                  <MenuItem value="gwarinpa">Gwarinpa</MenuItem>
+                  <MenuItem value="asokoro">Asokoro</MenuItem>
+                  <MenuItem value="lugbe">Lugbe</MenuItem>
+                  <MenuItem value="lifecamp">Life Camp</MenuItem>
+                </Select>
+              </FormControl>
             </div>
+
             <button
               type="submit"
               className="inline-flex h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-medium text-primary-foreground hover:bg-primary/90"
@@ -131,8 +162,12 @@ export function HomeHero({ profileName }: HomeHeroProps) {
                 key={stat.label}
                 className="rounded-2xl border border-border/50 bg-card/70 px-3 py-3 backdrop-blur"
               >
-                <p className="font-heading text-lg font-semibold">{stat.value}</p>
-                <p className="text-[11px] text-muted-foreground">{stat.label}</p>
+                <p className="font-heading text-lg font-semibold">
+                  {stat.value}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
+                  {stat.label}
+                </p>
               </div>
             ))}
           </motion.div>
@@ -144,11 +179,13 @@ export function HomeHero({ profileName }: HomeHeroProps) {
           transition={{ duration: 0.7, delay: 0.15 }}
           className="relative"
         >
-          <div className="soft-card overflow-hidden p-2">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80"
-              alt="Verified Abuja rental"
+          <div className="soft-card relative overflow-hidden p-2">
+            <Image
+              src={BRAND_HERO}
+              alt={`${APP_NAME} homes in Abuja`}
+              width={1200}
+              height={630}
+              priority
               className="aspect-[4/5] w-full rounded-[1.4rem] object-cover sm:aspect-[4/3]"
             />
             <motion.div
@@ -156,7 +193,7 @@ export function HomeHero({ profileName }: HomeHeroProps) {
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             >
-              <span className="sage-pill shadow-sm">Verified · For Rent</span>
+              <span className="sage-pill shadow-sm">EcoNest · Verified</span>
             </motion.div>
             <motion.div
               className="absolute right-6 bottom-6 left-6 rounded-3xl border border-border/60 bg-card/95 p-4 shadow-xl backdrop-blur"
@@ -164,10 +201,10 @@ export function HomeHero({ profileName }: HomeHeroProps) {
               transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
             >
               <p className="font-heading text-lg font-semibold">
-                Maitama duplex with BQ
+                EcoNest Homes
               </p>
               <p className="text-sm text-muted-foreground">
-                From ₦25,000,000 per year · Asokoro & Maitama corridor
+                Verified Abuja rentals · Trust first, chat in real time
               </p>
             </motion.div>
           </div>

@@ -5,7 +5,6 @@ import { notFound, redirect } from "next/navigation";
 import { DeleteListingButton } from "@/components/properties/delete-listing-button";
 import { PublishControls } from "@/components/properties/publish-controls";
 import { VerificationBadge } from "@/components/properties/verification-badge";
-import { SiteHeader } from "@/components/layout/site-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { canManageListings } from "@/lib/properties/access";
@@ -56,7 +55,6 @@ export default async function ListingDetailPage({
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <SiteHeader profile={profile} />
       <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-10">
         <div className="mb-6">
           <Link

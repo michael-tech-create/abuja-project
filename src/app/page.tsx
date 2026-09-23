@@ -6,6 +6,7 @@ import { HomeHero } from "@/components/home/home-hero";
 import { HomeMarkets } from "@/components/home/home-markets";
 import { HomeSponsors } from "@/components/home/home-sponsors";
 import { HomeUsedBy } from "@/components/home/home-used-by";
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { SiteHeader } from "@/components/layout/site-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { getCurrentProfile } from "@/lib/auth/session";
@@ -45,7 +46,7 @@ export default async function HomePage() {
 
       <footer className="border-t border-border/60 bg-card/40">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-8 sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-heading text-sm font-semibold">AbujaRentals</p>
+          <BrandLogo imgClassName="h-8 w-auto rounded-md" />
           <p className="text-xs text-muted-foreground">
             Verified rentals for Abuja, Nigeria · Trust first, chat in real time
           </p>

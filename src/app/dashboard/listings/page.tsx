@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { ListingCard } from "@/components/properties/listing-card";
-import { SiteHeader } from "@/components/layout/site-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { canManageListings } from "@/lib/properties/access";
 import { getOwnedProperties } from "@/lib/properties/queries";
@@ -35,7 +34,6 @@ export default async function ListingsPage({ searchParams }: ListingsPageProps) 
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <SiteHeader profile={profile} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-1">

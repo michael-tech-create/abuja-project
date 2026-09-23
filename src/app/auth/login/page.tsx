@@ -16,6 +16,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   return (
     <AuthShell
+      withBackground
       title="Welcome back"
       description="Sign in to browse verified Abuja rentals or manage your listings."
     >

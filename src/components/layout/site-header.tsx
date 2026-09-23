@@ -1,9 +1,9 @@
 import Link from "next/link";
 
+import { BrandLogo } from "@/components/brand/brand-logo";
 import { NavDropdown } from "@/components/layout/nav-dropdown";
 import { isAdminProfile } from "@/lib/admin/access";
 import { canManageListings } from "@/lib/properties/access";
-import { APP_NAME } from "@/lib/constants";
 import type { Profile } from "@/types/database";
 
 type SiteHeaderProps = {
@@ -31,12 +31,7 @@ export function SiteHeader({ profile }: SiteHeaderProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-primary/15 bg-white/90 backdrop-blur-md">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-6">
-        <Link
-          href="/"
-          className="font-heading text-lg font-semibold tracking-tight text-primary"
-        >
-          {APP_NAME}
-        </Link>
+        <BrandLogo imgClassName="h-9 w-auto rounded-md" priority />
 
         <nav className="flex items-center gap-2">
           <Link

@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { KycUploadForm } from "@/components/kyc/kyc-upload-form";
-import { SiteHeader } from "@/components/layout/site-header";
 import { StatusPill } from "@/components/admin/status-pill";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { DOCUMENT_TYPE_LABELS } from "@/lib/admin/labels";
@@ -40,7 +39,6 @@ export default async function DashboardKycPage({ searchParams }: PageProps) {
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
-      <SiteHeader profile={profile} />
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-8 px-6 py-10">
         <div className="space-y-2">
           <Link

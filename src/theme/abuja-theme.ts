@@ -28,6 +28,23 @@ export const abujaTheme = createTheme({
     },
     success: {
       main: "#0b7a3e",
+      light: "#9ad5b0",
+      dark: "#065f2f",
+    },
+    info: {
+      main: "#0288d1",
+      light: "#81d4fa",
+      dark: "#01579b",
+    },
+    warning: {
+      main: "#ed6c02",
+      light: "#ffcc80",
+      dark: "#e65100",
+    },
+    error: {
+      main: "#d32f2f",
+      light: "#ef9a9a",
+      dark: "#c62828",
     },
     divider: "rgba(11, 122, 62, 0.16)",
   },
